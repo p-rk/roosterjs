@@ -19,6 +19,7 @@ import { IEditor, PluginEventType } from 'roosterjs-editor-types';
 export default function applyChange(
     editor: IEditor,
     image: HTMLImageElement,
+    shadowImage: HTMLImageElement,
     editInfo: ImageEditInfo,
     previousSrc: string
 ): boolean {
@@ -39,7 +40,7 @@ export default function applyChange(
             break;
         case ImageEditInfoState.FullyChanged:
             // For other cases (cropped, rotated, ...) we need to create a new image to reflect the change
-            newSrc = generateDataURL(image, editInfo);
+            newSrc = generateDataURL(shadowImage, editInfo);
             break;
     }
 

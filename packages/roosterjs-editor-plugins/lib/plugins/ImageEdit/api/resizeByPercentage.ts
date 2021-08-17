@@ -23,7 +23,7 @@ export default function resizeByPercentage(
     const editInfo = getEditInfoFromImage(image);
 
     if (!isResizedTo(image, percentage)) {
-        loadImage(image, editInfo.src, () => {
+        loadImage(editInfo.src, shadowImage => {
             if (!editor.isDisposed() && editor.contains(image)) {
                 const lastSrc = image.src;
                 const { width, height } = getTargetSizeByPercentage(editInfo, percentage);
@@ -31,23 +31,24 @@ export default function resizeByPercentage(
                 editInfo.heightPx = Math.max(height, minHeight);
 
                 editor.addUndoSnapshot(() => {
-                    applyChange(editor, image, editInfo, lastSrc);
+                    applyChange(editor, image, shadowImage, editInfo, lastSrc);
                 }, ChangeSource.ImageResize);
             }
         });
     }
 }
 
-function loadImage(img: HTMLImageElement, src: string, callback: () => void) {
+function loadImage(src: string, callback: (img: HTMLImageElement) => void) {
+    const img = document.createElement('img');
     img.onload = () => {
         img.onload = null;
         img.onerror = null;
-        callback();
+        callback(img);
     };
     img.onerror = () => {
         img.onload = null;
         img.onerror = null;
-        callback();
+        callback(img);
     };
     img.src = src;
 }
