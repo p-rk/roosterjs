@@ -1,5 +1,6 @@
 import {
     blockFormat,
+    clearFormat,
     experimentCommitListChains,
     setIndentation,
     toggleBullet,
@@ -127,7 +128,10 @@ const OutdentWhenEnterOnEmptyLine: BuildInEditFeature<PluginKeyboardEvent> = {
     },
     handleEvent: (event, editor) => {
         editor.addUndoSnapshot(
-            () => toggleListAndPreventDefault(event, editor),
+            () => {
+                toggleListAndPreventDefault(event, editor);
+                clearFormat(editor);
+            },
             null /*changeSource*/,
             true /*canUndoByBackspace*/
         );
