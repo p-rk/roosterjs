@@ -26,6 +26,7 @@ import {
     PluginKeyboardEvent,
     QueryScope,
     RegionBase,
+    ClearFormatMode,
 } from 'roosterjs-editor-types';
 
 /**
@@ -130,7 +131,7 @@ const OutdentWhenEnterOnEmptyLine: BuildInEditFeature<PluginKeyboardEvent> = {
         editor.addUndoSnapshot(
             () => {
                 toggleListAndPreventDefault(event, editor);
-                clearFormat(editor);
+                clearFormat(editor, ClearFormatMode.Block);
             },
             null /*changeSource*/,
             true /*canUndoByBackspace*/

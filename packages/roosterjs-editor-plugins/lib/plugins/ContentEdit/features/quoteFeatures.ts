@@ -1,6 +1,7 @@
 import { clearFormat } from 'roosterjs-editor-api/lib';
 import {
     BuildInEditFeature,
+    ClearFormatMode,
     IEditor,
     Keys,
     PluginKeyboardEvent,
@@ -81,7 +82,7 @@ function splitQuote(event: PluginKeyboardEvent, editor: IEditor) {
         parent = splitBalancedNodeRange(childOfQuote);
         unwrap(parent);
         editor.select(childOfQuote, PositionType.Begin);
-        clearFormat(editor);
+        clearFormat(editor, ClearFormatMode.Block);
     });
     event.rawEvent.preventDefault();
 }
