@@ -1,4 +1,4 @@
-import { clearFormat } from 'roosterjs-editor-api/lib';
+import { clearFormat } from 'roosterjs-editor-api';
 import {
     BuildInEditFeature,
     ClearFormatMode,
