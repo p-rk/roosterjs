@@ -35,5 +35,6 @@ export { default as toggleHeader } from './format/toggleHeader';
 export { default as setListIndent } from './format/setListIndent';
 export { default as setListNumberPosition } from './format/setListNumberPosition';
 
+export { default as toggleListType } from './utils/toggleListType';
 export { default as blockFormat } from './utils/blockFormat';
 export { default as experimentCommitListChains } from './experiment/experimentCommitListChains';

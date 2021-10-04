@@ -4,6 +4,7 @@ import {
     setIndentation,
     toggleBullet,
     toggleNumbering,
+    toggleListType,
 } from 'roosterjs-editor-api';
 import {
     Browser,
@@ -25,6 +26,7 @@ import {
     PluginKeyboardEvent,
     QueryScope,
     RegionBase,
+    ListType,
 } from 'roosterjs-editor-types';
 
 /**
@@ -127,7 +129,7 @@ const OutdentWhenEnterOnEmptyLine: BuildInEditFeature<PluginKeyboardEvent> = {
     },
     handleEvent: (event, editor) => {
         editor.addUndoSnapshot(
-            () => toggleListAndPreventDefault(event, editor),
+            () => toggleListAndPreventDefault(event, editor, false /* includeSiblingLists */),
             null /*changeSource*/,
             true /*canUndoByBackspace*/
         );
@@ -162,27 +164,25 @@ const AutoBullet: BuildInEditFeature<PluginKeyboardEvent> = {
                 let regions: RegionBase[];
                 let searcher = editor.getContentSearcherOfCursor();
                 let textBeforeCursor = searcher.getSubStringBefore(4);
-                let rangeToDelete = searcher.getRangeFromText(
-                    textBeforeCursor,
-                    true /*exactMatch*/
-                );
+                let textRange = searcher.getRangeFromText(textBeforeCursor, true /*exactMatch*/);
 
-                if (!rangeToDelete) {
+                if (!textRange) {
                     // no op if the range can't be found
                 } else if (
                     textBeforeCursor.indexOf('*') == 0 ||
                     textBeforeCursor.indexOf('-') == 0
                 ) {
-                    prepareAutoBullet(editor, rangeToDelete);
+                    prepareAutoBullet(editor, textRange);
                     toggleBullet(editor);
                 } else if (isAListPattern(textBeforeCursor)) {
-                    prepareAutoBullet(editor, rangeToDelete);
+                    prepareAutoBullet(editor, textRange);
                     toggleNumbering(editor);
                 } else if ((regions = editor.getSelectedRegions()) && regions.length == 1) {
                     const num = parseInt(textBeforeCursor);
-                    prepareAutoBullet(editor, rangeToDelete);
+                    prepareAutoBullet(editor, textRange);
                     toggleNumbering(editor, num);
                 }
+                searcher.getRangeFromText(textBeforeCursor, true /*exactMatch*/)?.deleteContents();
             },
             null /*changeSource*/,
             true /*canUndoByBackspace*/
@@ -233,8 +233,6 @@ function getCacheNextSibiling(event: PluginKeyboardEvent, editor: IEditor): Node
 }
 
 function prepareAutoBullet(editor: IEditor, range: Range) {
-    range.deleteContents();
-
     const block = editor.getBlockElementAtNode(range.startContainer);
     const endNode = block?.getEndNode();
     if (endNode && getTagOfNode(endNode) != 'BR' && block?.getTextContent().trim() === '') {
@@ -248,16 +246,25 @@ function prepareAutoBullet(editor: IEditor, range: Range) {
     }
 }
 
-function toggleListAndPreventDefault(event: PluginKeyboardEvent, editor: IEditor) {
+function toggleListAndPreventDefault(
+    event: PluginKeyboardEvent,
+    editor: IEditor,
+    includeSiblingLists: boolean = true
+) {
     let listInfo = cacheGetListElement(event, editor);
     if (listInfo) {
         let listElement = listInfo[0];
         let tag = getTagOfNode(listElement);
-        if (tag == 'UL') {
-            toggleBullet(editor);
-        } else if (tag == 'OL') {
-            toggleNumbering(editor);
+
+        if (tag == 'UL' || tag == 'OL') {
+            toggleListType(
+                editor,
+                tag == 'UL' ? ListType.Unordered : ListType.Ordered,
+                null /* startNumber */,
+                includeSiblingLists
+            );
         }
+
         editor.focus();
         event.rawEvent.preventDefault();
     }

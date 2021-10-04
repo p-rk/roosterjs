@@ -1,6 +1,10 @@
+import safeInstanceOf from './safeInstanceOf';
 import { Browser } from './Browser';
 import { CreateElementData, KnownCreateElementDataIndex } from 'roosterjs-editor-types';
 
+/**
+ * All known CreateElementData used by roosterjs to create elements
+ */
 export const KnownCreateElementData: Record<KnownCreateElementDataIndex, CreateElementData> = {
     [KnownCreateElementDataIndex.None]: null,
 
@@ -48,6 +52,12 @@ export const KnownCreateElementData: Record<KnownCreateElementDataIndex, CreateE
     },
 };
 
+/**
+ * Create DOM element from the given CreateElementData
+ * @param elementData The CreateElementData or an index of a known CreateElementData used for creating this element
+ * @param document The document to create the element from
+ * @returns The root DOM element just created
+ */
 export default function createElement(
     elementData: CreateElementData | KnownCreateElementDataIndex,
     document: Document
@@ -73,7 +83,7 @@ export default function createElement(
         result.className = className;
     }
 
-    if (dataset && result instanceof HTMLElement) {
+    if (dataset && safeInstanceOf(result, 'HTMLElement')) {
         Object.keys(dataset).forEach(datasetName => {
             result.dataset[datasetName] = dataset[datasetName];
         });

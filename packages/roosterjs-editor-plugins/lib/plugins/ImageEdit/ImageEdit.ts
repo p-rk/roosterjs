@@ -1,15 +1,14 @@
 import applyChange from './editInfoUtils/applyChange';
 import canRegenerateImage from './api/canRegenerateImage';
-import Cropper, { getCropHTML } from './imageEditors/Cropper';
-import deleteEditInfo from './editInfoUtils/deleteEditInfo';
 import DragAndDropContext, { X, Y } from './types/DragAndDropContext';
 import DragAndDropHandler from '../../pluginUtils/DragAndDropHandler';
 import DragAndDropHelper from '../../pluginUtils/DragAndDropHelper';
-import getEditInfoFromImage from './editInfoUtils/getEditInfoFromImage';
 import getGeneratedImageSize from './editInfoUtils/getGeneratedImageSize';
 import ImageEditInfo from './types/ImageEditInfo';
 import ImageHtmlOptions from './types/ImageHtmlOptions';
-import Rotator, { getRotateHTML, ROTATE_GAP, ROTATE_SIZE } from './imageEditors/Rotator';
+import { Cropper, getCropHTML } from './imageEditors/Cropper';
+import { deleteEditInfo, getEditInfoFromImage } from './editInfoUtils/editInfo';
+import { getRotateHTML, Rotator, updateRotateHandlePosition } from './imageEditors/Rotator';
 import { ImageEditElementClass } from './types/ImageEditElementClass';
 import { insertEntity } from 'roosterjs-editor-api';
 import {
@@ -24,7 +23,8 @@ import {
     toArray,
     wrap,
 } from 'roosterjs-editor-dom';
-import Resizer, {
+import {
+    Resizer,
     doubleCheckResize,
     getSideResizeHTML,
     getCornerResizeHTML,
@@ -49,6 +49,10 @@ import {
 const SHIFT_KEYCODE = 16;
 const CTRL_KEYCODE = 17;
 const ALT_KEYCODE = 18;
+
+const DIRECTIONS = 8;
+const DirectionRad = (Math.PI * 2) / DIRECTIONS;
+const DirectionOrder = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 
 /**
  * Map the experimental features to image edit operations to help determine which operation is allowed
@@ -118,6 +122,11 @@ export default class ImageEdit implements EditorPlugin {
 
     // Drag and drop helper objects
     private dndHelpers: DragAndDropHelper<DragAndDropContext, any>[];
+
+    /**
+     * Identify if the image was resized by the user.
+     */
+    private wasResized: boolean;
 
     /**
      * Create a new instance of ImageEdit
@@ -266,7 +275,9 @@ export default class ImageEdit implements EditorPlugin {
             this.clearDndHelpers();
 
             // Apply the changes, and add undo snapshot if necessary
-            if (applyChange(this.editor, this.image, this.editInfo, this.lastSrc)) {
+            if (
+                applyChange(this.editor, this.image, this.editInfo, this.lastSrc, this.wasResized)
+            ) {
                 this.editor.addUndoSnapshot(() => this.image, ChangeSource.ImageResize);
             }
 
@@ -292,6 +303,10 @@ export default class ImageEdit implements EditorPlugin {
 
             // Get initial edit info
             this.editInfo = getEditInfoFromImage(image);
+
+            //Check if the image was resized by the user
+            this.wasResized = checkIfImageWasResized(this.image);
+
             operation =
                 (canRegenerateImage(image) ? operation : ImageEditOperation.Resize) &
                 this.allowedOperations;
@@ -370,7 +385,6 @@ export default class ImageEdit implements EditorPlugin {
                 wrapper.appendChild(element);
             }
         });
-
         return wrapper;
     }
 
@@ -395,7 +409,6 @@ export default class ImageEdit implements EditorPlugin {
 
         if (img && parent) {
             img.style.position = '';
-            img.style.maxWidth = '100%';
             img.style.margin = null;
             img.style.textAlign = null;
 
@@ -416,12 +429,13 @@ export default class ImageEdit implements EditorPlugin {
             const cropOverlays = getEditElements(wrapper, ImageEditElementClass.CropOverlay);
             const rotateCenter = getEditElements(wrapper, ImageEditElementClass.RotateCenter)[0];
             const rotateHandle = getEditElements(wrapper, ImageEditElementClass.RotateHandle)[0];
+            const resizeHandles = getEditElements(wrapper, ImageEditElementClass.ResizeHandle);
+            const cropHandles = getEditElements(wrapper, ImageEditElementClass.CropHandle);
 
             // Cropping and resizing will show different UI, so check if it is cropping here first
             const isCropping = cropContainers.length == 1 && cropOverlays.length == 4;
             const {
                 angleRad,
-                heightPx,
                 bottomPercent,
                 leftPercent,
                 rightPercent,
@@ -473,6 +487,7 @@ export default class ImageEdit implements EditorPlugin {
                 setSize(cropOverlays[1], undefined, 0, 0, cropBottomPx, cropRightPx, undefined);
                 setSize(cropOverlays[2], cropLeftPx, undefined, 0, 0, undefined, cropBottomPx);
                 setSize(cropOverlays[3], 0, cropTopPx, undefined, 0, cropLeftPx, undefined);
+                updateHandleCursor(cropHandles, angleRad);
             } else {
                 // For rotate/resize, set the margin of the image so that cropped part won't be visible
                 this.image.style.margin = `${-cropTopPx}px 0 0 ${-cropLeftPx}px`;
@@ -481,6 +496,7 @@ export default class ImageEdit implements EditorPlugin {
                 if (context?.elementClass == ImageEditElementClass.ResizeHandle) {
                     const clientWidth = wrapper.clientWidth;
                     const clientHeight = wrapper.clientHeight;
+                    this.wasResized = true;
                     doubleCheckResize(
                         this.editInfo,
                         this.options.preserveRatio,
@@ -491,29 +507,15 @@ export default class ImageEdit implements EditorPlugin {
                     this.updateWrapper();
                 }
 
-                // Move rotate handle. When image is very close to the border of editor, rotate handle may not be visible.
-                // Fix it by reduce the distance from image to rotate handle
-                const distance = this.editor.getRelativeDistanceToEditor(
-                    wrapper,
-                    true /*addScroll*/
+                updateRotateHandlePosition(
+                    this.editInfo,
+                    this.editor.getRelativeDistanceToEditor(wrapper, true /*addScroll*/),
+                    marginVertical,
+                    rotateCenter,
+                    rotateHandle
                 );
 
-                if (rotateCenter && rotateHandle && distance) {
-                    const cosAngle = Math.cos(angleRad);
-                    const adjustedDistance =
-                        cosAngle <= 0
-                            ? Number.MAX_SAFE_INTEGER
-                            : (distance[1] + heightPx / 2 + marginVertical) / cosAngle -
-                              heightPx / 2;
-                    const rotateGap = Math.max(Math.min(ROTATE_GAP, adjustedDistance), 0);
-                    const rotateTop = Math.max(
-                        Math.min(ROTATE_SIZE, adjustedDistance - rotateGap),
-                        0
-                    );
-                    rotateCenter.style.top = getPx(-rotateGap);
-                    rotateCenter.style.height = getPx(rotateGap);
-                    rotateHandle.style.top = getPx(-rotateTop);
-                }
+                updateHandleCursor(resizeHandles, angleRad);
             }
         }
     };
@@ -534,7 +536,6 @@ export default class ImageEdit implements EditorPlugin {
             elementClass,
         };
         const wrapper = this.getImageWrapper(this.image);
-
         return wrapper
             ? getEditElements(wrapper, elementClass).map(
                   element =>
@@ -590,4 +591,55 @@ function isRtl(element: Node): boolean {
     return safeInstanceOf(element, 'HTMLElement')
         ? getComputedStyle(element, 'direction') == 'rtl'
         : false;
+}
+
+function handleRadIndexCalculator(angleRad: number): number {
+    let idx = Math.round(angleRad / DirectionRad) % DIRECTIONS;
+    return idx < 0 ? idx + DIRECTIONS : idx;
+}
+
+function rotateHandles(element: HTMLElement, angleRad: number): string {
+    const radIndex = handleRadIndexCalculator(angleRad);
+    const originalDirection = element.dataset.y + element.dataset.x;
+    const originalIndex = DirectionOrder.indexOf(originalDirection);
+    const rotatedIndex = originalIndex >= 0 && originalIndex + radIndex;
+    return DirectionOrder[rotatedIndex % DIRECTIONS];
+}
+
+/**
+ * Rotate the resizer and cropper handles according to the image position.
+ * @param handles The resizer handles.
+ * @param angleRad The angle that the image was rotated.
+ */
+function updateHandleCursor(handles: HTMLElement[], angleRad: number) {
+    handles.map(handle => {
+        handle.style.cursor = `${rotateHandles(handle, angleRad)}-resize`;
+    });
+}
+
+/**
+ * Check if the current image was resized by the user
+ * @param image the current image
+ * @returns if the user resized the image, returns true, otherwise, returns false
+ */
+function checkIfImageWasResized(image: HTMLImageElement): boolean {
+    const { width, height, style } = image;
+    const isMaxWidthInitial =
+        style.maxWidth === '' || style.maxWidth === 'initial' || style.maxWidth === 'auto';
+    if (
+        isMaxWidthInitial &&
+        (isFixedNumberValue(style.height) ||
+            isFixedNumberValue(style.width) ||
+            isFixedNumberValue(width) ||
+            isFixedNumberValue(height))
+    ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function isFixedNumberValue(value: string | number) {
+    const numberValue = typeof value === 'string' ? parseInt(value) : value;
+    return !isNaN(numberValue);
 }

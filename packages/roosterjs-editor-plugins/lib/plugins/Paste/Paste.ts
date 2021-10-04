@@ -1,11 +1,17 @@
+import convertPasteContentForSingleImage from './imageConverter/convertPasteContentForSingleImage';
 import convertPastedContentForLI from './commonConverter/convertPastedContentForLI';
 import convertPastedContentFromExcel from './excelConverter/convertPastedContentFromExcel';
 import convertPastedContentFromPowerPoint from './pptConverter/convertPastedContentFromPowerPoint';
 import convertPastedContentFromWord from './wordConverter/convertPastedContentFromWord';
 import handleLineMerge from './lineMerge/handleLineMerge';
-import { EditorPlugin, IEditor, PluginEvent, PluginEventType } from 'roosterjs-editor-types';
 import { toArray } from 'roosterjs-editor-dom';
-import { WAC_IDENTIFY_SELECTOR } from './officeOnlineConverter/constants';
+import {
+    EditorPlugin,
+    ExperimentalFeatures,
+    IEditor,
+    PluginEvent,
+    PluginEventType,
+} from 'roosterjs-editor-types';
 import convertPastedContentFromWordOnline, {
     isWordOnlineWithList,
 } from './officeOnlineConverter/convertPastedContentFromWordOnline';
@@ -18,6 +24,8 @@ const PROG_ID_NAME = 'ProgId';
 const EXCEL_ONLINE_ATTRIBUTE_VALUE = 'Excel.Sheet';
 const POWERPOINT_ATTRIBUTE_VALUE = 'PowerPoint.Slide';
 const GOOGLE_SHEET_NODE_NAME = 'google-sheets-html-origin';
+const WAC_IDENTIFY_SELECTOR =
+    'ul[class^="BulletListStyle"]>.OutlineElement,ol[class^="NumberListStyle"]>.OutlineElement';
 
 /**
  * Paste plugin, handles BeforePaste event and reformat some special content, including:
@@ -62,7 +70,7 @@ export default class Paste implements EditorPlugin {
      */
     onPluginEvent(event: PluginEvent) {
         if (event.eventType == PluginEventType.BeforePaste) {
-            const { htmlAttributes, fragment, sanitizingOption } = event;
+            const { htmlAttributes, fragment, sanitizingOption, clipboardData } = event;
             const trustedHTMLHandler = this.editor.getTrustedHTMLHandler();
             let wacListElements: Node[];
 
@@ -94,6 +102,12 @@ export default class Paste implements EditorPlugin {
                 }
             } else if (fragment.querySelector(GOOGLE_SHEET_NODE_NAME)) {
                 sanitizingOption.additionalTagReplacements[GOOGLE_SHEET_NODE_NAME] = '*';
+            } else if (
+                this.editor.isFeatureEnabled(ExperimentalFeatures.ConvertSingleImageBody) &&
+                clipboardData.htmlFirstLevelChildTags?.length == 1 &&
+                clipboardData.htmlFirstLevelChildTags[0] == 'IMG'
+            ) {
+                convertPasteContentForSingleImage(event, trustedHTMLHandler);
             } else {
                 convertPastedContentForLI(fragment);
                 handleLineMerge(fragment);

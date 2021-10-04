@@ -1,8 +1,8 @@
 import applyChange from '../editInfoUtils/applyChange';
-import getEditInfoFromImage from '../editInfoUtils/getEditInfoFromImage';
 import getTargetSizeByPercentage from '../editInfoUtils/getTargetSizeByPercentage';
 import isResizedTo from './isResizedTo';
 import { ChangeSource, IEditor } from 'roosterjs-editor-types';
+import { getEditInfoFromImage } from '../editInfoUtils/editInfo';
 
 /**
  * Resize the image by percentage of its natural size. If the image is cropped or rotated,
@@ -31,7 +31,7 @@ export default function resizeByPercentage(
                 editInfo.heightPx = Math.max(height, minHeight);
 
                 editor.addUndoSnapshot(() => {
-                    applyChange(editor, image, editInfo, lastSrc);
+                    applyChange(editor, image, editInfo, lastSrc, true /*wasResized*/);
                 }, ChangeSource.ImageResize);
             }
         });

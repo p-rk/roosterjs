@@ -1,6 +1,6 @@
 {
     "name": "roosterjs",
-    "version": "8.7.0",
+    "version": "8.10.0",
     "description": "Framework-independent javascript editor",
     "repository": {
         "type": "git",
@@ -9,7 +9,7 @@
     "license": "MIT",
     "scripts": {
         "clean": "node tools/build.js clean",
-        "dts": "node tools/build.js dts",
+        "dts": "node tools/build.js clean normalize buildcommonjs dts",
         "tslint": "node tools/build.js tslint",
         "normalize": "node tools/build.js normalize",
         "pack": "node tools/build.js pack",
@@ -18,9 +18,10 @@
         "builddemo": "node tools/build.js builddemo",
         "builddoc": "node tools/build.js builddoc",
         "build": "node tools/build.js clean checkdep normalize tslint buildcommonjs dts pack:prod builddemo",
-        "build:ci": "node tools/build.js clean checkdep normalize tslint buildcommonjs buildamd dts pack packprod builddemo builddoc",
+        "build:ci": "node tools/build.js --noProgressBar clean checkdep normalize tslint buildcommonjs buildamd dts pack packprod builddemo builddoc",
         "start": "node tools/start.js",
         "test": "karma start",
+        "test:chrome": "karma start --chrome",
         "test:debug": "karma start --no-single-run",
         "test:coverage": "karma start --coverage",
         "publish": "node tools/build.js clean normalize tslint buildcommonjs buildamd dts pack packprod builddemo publish"
@@ -40,6 +41,7 @@
         "karma": "5.0.4",
         "karma-coverage-istanbul-reporter": "3.0.3",
         "karma-firefox-launcher": "1.3.0",
+        "karma-chrome-launcher": "3.1.0",
         "karma-jasmine": "3.1.1",
         "karma-phantomjs-launcher": "1.0.4",
         "karma-sourcemap-loader": "0.3.7",

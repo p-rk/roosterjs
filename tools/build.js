@@ -26,6 +26,9 @@ var version = mainPackageJson.version;
 // Token
 var token = null;
 
+// Misc
+var showProgressBar = true;
+
 // Commands
 var commands = [
     'checkdep', // Check circular dependency among files
@@ -286,23 +289,19 @@ async function pack(isProduction, isAmd) {
     });
 }
 
-var dtsQueue = [];
-var dtsFileName;
-
-function prepareDts() {
-    dtsQueue = dts.prepareDts(rootPath, distPath, ['roosterjs/lib/index.d.ts']);
-}
-
 function buildDts(isAmd) {
+    var tsFiles = glob
+        .sync(path.relative(rootPath, path.join(distPath, '**', 'lib', '**', '*.d.ts')), {
+            nocase: true,
+        })
+        .map(x => path.relative(distPath, x));
+    var dtsQueue = dts.prepareDts(rootPath, distPath, 'roosterjs/lib/index.d.ts', tsFiles);
+
     mkdirp.sync(roosterJsDistPath);
     let filename = dts.output(roosterJsDistPath, 'roosterjs', isAmd, dtsQueue);
     if (!isAmd) {
-        dtsFileName = filename;
+        runNode(typescriptPath + ' ' + filename + ' --noEmit', rootPath);
     }
-}
-
-function verifyDts() {
-    runNode(typescriptPath + ' ' + dtsFileName + ' --noEmit', rootPath);
 }
 
 function buildDoc() {
@@ -490,15 +489,31 @@ class Runner {
         });
     }
 
+    getUI() {
+        var index = 0;
+        return showProgressBar
+            ? new ProgressBar('[:bar] (:current/:total finished) :message  ', {
+                  total: this.tasks.length,
+                  width: 40,
+                  complete: '#',
+              })
+            : {
+                  tick: (p1, p2) => {
+                      index++;
+                      var msg = (p1 || p2).message;
+
+                      if (msg) {
+                          console.log(`[Step ${index} of ${this.tasks.length}]: ${msg}`);
+                      }
+                  },
+              };
+    }
+
     run() {
         (async () => {
             console.log(`Start building roosterjs version ${version}\n`);
 
-            var bar = new ProgressBar('[:bar] (:current/:total finished) :message  ', {
-                total: this.tasks.length,
-                width: 40,
-                complete: '#',
-            });
+            var bar = this.getUI();
 
             for (var i = 0; i < this.tasks.length; i++) {
                 var task = this.tasks[i];
@@ -575,18 +590,13 @@ function buildAll(options) {
             enabled: options.packprod || (!isAmd && options.builddemo),
         })),
         {
-            message: 'Collecting information for type definition file...',
-            callback: prepareDts,
+            message: `Generating type definition file for CommonJs'}...`,
+            callback: () => buildDts(false /*isAmd*/),
             enabled: options.dts,
         },
-        ...[false, true].map(isAmd => ({
-            message: `Generating type definition file for ${isAmd ? 'AMD' : 'CommonJs'}...`,
-            callback: () => buildDts(isAmd),
-            enabled: options.dts,
-        })),
         {
-            message: 'Verifying type definition file...',
-            callback: verifyDts,
+            message: `Generating type definition file for AMD'}...`,
+            callback: () => buildDts(true /*isAmd*/),
             enabled: options.dts,
         },
         {
@@ -617,13 +627,14 @@ function parseOptions(additionalParams) {
     for (var i = 0; i < params.length; i++) {
         if (params[i] == '--token') {
             token = params[++i];
-            continue;
-        }
+        } else if (params[i] == '--noProgressBar') {
+            showProgressBar = false;
+        } else {
+            var index = commands.indexOf(params[i]);
 
-        var index = commands.indexOf(params[i]);
-
-        if (index >= 0) {
-            options[commands[index]] = true;
+            if (index >= 0) {
+                options[commands[index]] = true;
+            }
         }
     }
     return options;
