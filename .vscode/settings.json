@@ -77,5 +77,6 @@
         "vlist",
         "vtable",
         "wais"
-    ]
+    ],
+    "files.eol": "\r\n"
 }

@@ -78,6 +78,7 @@ const buttons: { [key: string]: RibbonButtonType } = {
             '72pt': '72',
         },
     },
+
     textColor: {
         title: 'Text color',
         image: require('../svg/textcolor.svg'),
