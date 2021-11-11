@@ -63,6 +63,7 @@ const buttons: { [key: string]: RibbonButtonType } = {
             'Times New Roman': 'Times New Roman',
         },
     },
+
     fontSize: {
         title: 'Font size',
         image: require('../svg/fontsize.svg'),
