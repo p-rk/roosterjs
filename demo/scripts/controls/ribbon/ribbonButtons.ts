@@ -150,6 +150,7 @@ const buttons: { [key: string]: RibbonButtonType } = {
             '#000000': 'Black',
         },
     },
+
     capitalization: {
         title: 'Change case',
         image: require('../svg/capitalization.svg'),

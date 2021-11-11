@@ -78,5 +78,6 @@
         "vtable",
         "wais"
     ],
-    "files.eol": "\r\n"
+    "files.eol": "\r\n",
+    "prettier.endOfLine": "crlf"
 }
