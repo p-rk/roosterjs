@@ -28,6 +28,7 @@ export default class RibbonButton extends React.Component<RibbonButtonProps, Rib
     render() {
         let button = this.props.button;
         let editor = this.props.plugin.getEditor();
+
         let isImageButton = !!button.image;
         let className = isImageButton ? styles.button : styles.textButton;
 

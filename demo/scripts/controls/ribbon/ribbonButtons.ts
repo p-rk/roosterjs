@@ -120,6 +120,7 @@ const buttons: { [key: string]: RibbonButtonType } = {
             '#000000': 'Black',
         },
     },
+
     backColor: {
         title: 'Highlight',
         image: require('../svg/backcolor.svg'),
