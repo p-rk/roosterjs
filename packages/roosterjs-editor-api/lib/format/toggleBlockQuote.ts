@@ -1,5 +1,4 @@
 import blockWrap from '../utils/blockWrap';
-import tableSelectionBeforeCallBackWrap from '../utils/tableSelectionBeforeCallBackWrap';
 import { IEditor, QueryScope } from 'roosterjs-editor-types';
 import { unwrap, wrap } from 'roosterjs-editor-dom';
 
@@ -24,14 +23,6 @@ export default function toggleBlockQuote(editor: IEditor, styler?: (element: HTM
             const wrapper = wrap(nodes, BLOCKQUOTE_TAG);
             (styler || DEFAULT_STYLER)(wrapper);
         },
-        () =>
-            tableSelectionBeforeCallBackWrap(
-                editor,
-                BLOCKQUOTE_TAG,
-                () =>
-                    editor.queryElements(BLOCKQUOTE_TAG, QueryScope.OnSelection, unwrap).length ==
-                    0,
-                unwrap
-            )
+        () => editor.queryElements('blockquote', QueryScope.OnSelection, unwrap).length == 0
     );
 }

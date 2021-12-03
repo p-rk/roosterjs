@@ -1,10 +1,5 @@
 import { ChangeSource, DocumentCommand, IEditor, PluginEventType } from 'roosterjs-editor-types';
-import {
-    PendableFormatCommandMap,
-    PendableFormatNames,
-    safeInstanceOf,
-    VTable,
-} from 'roosterjs-editor-dom';
+import { PendableFormatCommandMap, PendableFormatNames } from 'roosterjs-editor-dom';
 
 /**
  * @internal
@@ -22,24 +17,7 @@ export default function execCommand(editor: IEditor, command: DocumentCommand) {
     let formatter = () => editor.getDocument().execCommand(command, false, null);
 
     let range = editor.getSelectionRange();
-
-    const tableSelection = editor.getTableSelection();
-
-    if (tableSelection.vSelection) {
-        const table = editor.getElementAtCursor('table');
-        if (safeInstanceOf(table, 'HTMLTableElement')) {
-            const vTable = new VTable(table);
-            vTable.startRange = tableSelection.startRange;
-            vTable.endRange = tableSelection.endRange;
-            vTable.forEachSelectedCell(cell => {
-                if (cell.td) {
-                    editor.select(cell.td);
-                    formatter();
-                }
-            });
-            editor.select(range);
-        }
-    } else if (range && range.collapsed) {
+    if (range && range.collapsed) {
         editor.addUndoSnapshot();
         const formatState = editor.getPendableFormatState(false /* forceGetStateFromDom */);
         formatter();

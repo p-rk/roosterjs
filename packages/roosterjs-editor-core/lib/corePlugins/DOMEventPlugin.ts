@@ -1,4 +1,9 @@
-import { arrayPush, Browser, isCharacterValue } from 'roosterjs-editor-dom';
+import {
+    arrayPush,
+    Browser,
+    clearSelectedTableCells,
+    isCharacterValue,
+} from 'roosterjs-editor-dom';
 import {
     ChangeSource,
     ContextMenuProvider,
@@ -162,6 +167,7 @@ export default class DOMEventPlugin implements PluginWithState<DOMEventPluginSta
         if (!this.state.selectionRange) {
             this.state.selectionRange = this.editor.getSelectionRange(false /*tryGetFromCache*/);
         }
+        clearSelectedTableCells(this.state.scrollContainer, true);
     };
     private onScroll = (e: UIEvent) => {
         this.editor.triggerPluginEvent(PluginEventType.Scroll, {

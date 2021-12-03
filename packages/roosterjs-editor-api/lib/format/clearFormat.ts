@@ -26,7 +26,6 @@ import {
     safeInstanceOf,
     setStyles,
     splitBalancedNodeRange,
-    TableMetadata,
     toArray,
     unwrap,
     wrap,
@@ -78,10 +77,6 @@ function clearNodeFormat(node: Node): boolean {
         } else {
             // 3. Otherwise, remove all attributes
             clearAttribute(node as HTMLElement);
-        }
-
-        if ((node as HTMLElement).dataset[TableMetadata.TEMP_BACKGROUND_COLOR]) {
-            delete (node as HTMLElement).dataset[TableMetadata.TEMP_BACKGROUND_COLOR];
         }
     }
 

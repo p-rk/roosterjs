@@ -23,10 +23,6 @@ export default function blockFormat(
             regions.forEach(region => callback(region, start, end, chains));
             experimentCommitListChains(editor, chains);
         }
-
-        const tableSelection = editor.getTableSelection();
-        if (!tableSelection.vSelection) {
-            editor.select(start, end);
-        }
+        editor.select(start, end);
     }, ChangeSource.Format);
 }

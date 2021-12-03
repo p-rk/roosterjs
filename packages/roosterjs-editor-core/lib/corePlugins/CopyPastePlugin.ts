@@ -116,8 +116,6 @@ export default class CopyPastePlugin implements PluginWithState<CopyPastePluginS
             });
 
             this.editor.runAsync(editor => {
-                this.cleanUpAndRestoreSelection(tempDiv, originalRange);
-
                 if (vSelection) {
                     if (vSelection && safeInstanceOf(firstTarget, 'HTMLTableCellElement')) {
                         const vTable = new VTable(firstTarget);
@@ -126,6 +124,7 @@ export default class CopyPastePlugin implements PluginWithState<CopyPastePluginS
                         originalRange.collapse(true);
                     }
                 }
+                this.cleanUpAndRestoreSelection(tempDiv, originalRange);
                 if (isCut) {
                     editor.addUndoSnapshot(() => {
                         const position = this.editor.deleteSelectedContent();
