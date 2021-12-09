@@ -4,7 +4,7 @@ import {
     extractClipboardEvent,
     setHtmlWithSelectionPath,
     moveChildNodes,
-    isMobile,
+    isAndroid,
 } from 'roosterjs-editor-dom';
 import {
     ChangeSource,
@@ -161,9 +161,12 @@ export default class CopyPastePlugin implements PluginWithState<CopyPastePluginS
     }
 
     private cleanUpAndRestoreSelection(tempDiv: HTMLDivElement, range: Range) {
-        if (!isMobile(this.editor.getDocument().defaultView)) {
-            this.editor.select(range);
+        if (isAndroid(this.editor?.getDocument().defaultView || window)) {
+            range.collapse();
         }
+
+        this.editor.select(range);
+
         tempDiv.style.backgroundColor = '';
         tempDiv.style.color = '';
         tempDiv.style.display = 'none';
