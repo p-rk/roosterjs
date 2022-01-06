@@ -417,7 +417,7 @@ export default class TableSelectionPlugin implements PluginWithState<TableSelect
 
         const tempTables = this.cachedTables;
 
-        tempTables.forEach((vTable, index) => {
+        tempTables.forEach(vTable => {
             if (!this.contentDiv.contains(vTable.table)) {
                 this.cachedTables.slice(this.cachedTables.indexOf(vTable), 1);
             }
@@ -927,10 +927,10 @@ export default class TableSelectionPlugin implements PluginWithState<TableSelect
                     });
 
                     this.editor.focus();
-                    const range = new Range();
+                    this.range = new Range();
                     this.range.selectNodeContents(this.state.lastTarget);
                     this.range.collapse();
-                    this.editor.select(range);
+                    this.editor.select(this.range);
 
                     vTable.highlightAll();
                     this.state.startRange = vTable.startRange;

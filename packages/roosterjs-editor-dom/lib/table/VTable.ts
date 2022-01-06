@@ -466,7 +466,7 @@ export default class VTable {
     }
 
     /**
-     * Modified the selection range to take into account the col and row spans
+     * Modifies the selection range to take into account the col and row spans
      */
     normalizeSelectionRange() {
         if (this.cells) {
@@ -489,11 +489,15 @@ export default class VTable {
                     }
                 });
             };
-
-            if (this.startRange[0] >= this.endRange[0] && this.startRange[1] >= this.endRange[1]) {
-                handler(this.startRange);
-            } else {
-                handler(this.endRange);
+            if (this.startRange && this.endRange) {
+                if (
+                    this.startRange[0] >= this.endRange[0] &&
+                    this.startRange[1] >= this.endRange[1]
+                ) {
+                    handler(this.startRange);
+                } else {
+                    handler(this.endRange);
+                }
             }
         }
     }
