@@ -117,7 +117,7 @@ export default class TableSelectionPlugin implements PluginWithState<TableSelect
 
             switch (event.eventType) {
                 case PluginEventType.ExtractContentWithDom:
-                    clearSelectedTableCells(event.clonedRoot, true);
+                    clearSelectedTableCells(event.clonedRoot);
                     break;
                 case PluginEventType.MouseUp:
                     this.handleMouseUp(event);
@@ -224,13 +224,19 @@ export default class TableSelectionPlugin implements PluginWithState<TableSelect
                 return;
             }
 
-            if (this.range.commonAncestorContainer.nodeType == Node.TEXT_NODE) {
+            if (
+                this.range.commonAncestorContainer.nodeType == Node.TEXT_NODE ||
+                (getTagOfNode(this.range.commonAncestorContainer) == 'TD' &&
+                    !forceSelection &&
+                    !this.range.collapsed)
+            ) {
                 return;
             }
             let firstTable = this.editor.getElementAtCursor(
                 'table',
                 this.state.firstTarget
             ) as HTMLTableElement;
+            this.range = this.editor.getSelectionRange();
             let targetTable = this.editor.getElementAtCursor('table', this.range.endContainer);
             this.state.lastTarget = this.state.lastTarget ?? this.state.firstTarget;
 
@@ -336,6 +342,12 @@ export default class TableSelectionPlugin implements PluginWithState<TableSelect
 
     private getNextTD(event: PluginKeyDownEvent | PluginKeyUpEvent): number[] {
         if (safeInstanceOf(this.state.lastTarget, 'HTMLTableCellElement')) {
+            if (
+                !this.vTable ||
+                this.vTable.table != this.editor.getElementAtCursor('table', this.state.lastTarget)
+            ) {
+                this.vTable = new VTable(this.state.lastTarget);
+            }
             let coordinates = this.vTable.getCellCoordinates(this.state.lastTarget);
 
             switch (event.rawEvent.which) {

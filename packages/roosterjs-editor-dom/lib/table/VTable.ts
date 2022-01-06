@@ -561,12 +561,11 @@ export default class VTable {
 
     /**
      * Removes the selection of all the tables
-     * @param cacheSelection whether we need to cache the selection
      */
-    deSelectAll(cacheSelection: boolean = false) {
+    deSelectAll() {
         this.forEachCell(cell => {
             if (cell.td) {
-                this.deselectCellHandler(cell.td, cacheSelection);
+                this.deselectCellHandler(cell.td);
             }
         });
         if (this.table?.classList.contains(TableMetadata.TABLE_SELECTED)) {
@@ -602,14 +601,9 @@ export default class VTable {
     /**
      * Handler to remove the selected style
      * @param cell element to apply the style
-     * @param cacheSelection whether we need to cache the selection
      * @returns
      */
-    private deselectCellHandler = (cell: HTMLElement, cacheSelection: boolean = false) => {
-        if (cell.dataset[TableMetadata.ON_FOCUS_CACHE] == 'onBlur') {
-            delete cell.dataset[TableMetadata.ON_FOCUS_CACHE];
-            return;
-        }
+    private deselectCellHandler = (cell: HTMLElement) => {
         if (
             cell &&
             safeInstanceOf(cell, 'HTMLTableCellElement') &&
@@ -620,17 +614,8 @@ export default class VTable {
             delete cell.dataset[TEMP_BACKGROUND_COLOR];
             cell.querySelectorAll('table').forEach(table => {
                 const vTable = new VTable(table);
-                vTable.forEachCell(cell => vTable.deselectCellHandler(cell.td, cacheSelection));
+                vTable.forEachCell(cell => vTable.deselectCellHandler(cell.td));
             });
-
-            if (cacheSelection) {
-                cell.classList.add(TABLE_CELL_SELECTED_CLASS);
-                cell.dataset[TableMetadata.ON_FOCUS_CACHE] = 'onBlur';
-
-                cell.dataset[TEMP_BACKGROUND_COLOR] = getOriginalColor(
-                    cell.style.backgroundColor ?? cell.style.background
-                );
-            }
         }
     };
 
