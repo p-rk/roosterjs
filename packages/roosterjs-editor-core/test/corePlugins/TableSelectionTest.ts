@@ -32,10 +32,6 @@ describe('TableSelectionPlugin', () => {
         simulateMouseEvent('mouseup', target2);
         expect(editor.getScrollContainer().innerHTML).toBe(result);
         expect(editor.getSelectionRange().collapsed).toBe(rangeCollapsed);
-
-        if (editor.getScrollContainer().innerHTML != result) {
-            console.log(editor.getScrollContainer().innerHTML);
-        }
     }
 
     it('Selection inside of table 1', () => {
@@ -152,8 +148,8 @@ describe('TableSelectionPlugin', () => {
         simulateMouseEvent('click', tableSelector);
 
         expect(tableSelector).toBeDefined();
-        expect(editor.getContent()).toBe(
-            '<div><table id="tableSelectionTestId" class=""><tbody><tr><td style="" class="_tableCellSelected" data-on-focus-cache="onBlur" data-original-background-color="">a</td><td style="" class="_tableCellSelected" data-on-focus-cache="onBlur" data-original-background-color="">w</td></tr></tbody></table></div>'
+        expect(editor.getScrollContainer().innerHTML).toBe(
+            '<div><table id="tableSelectionTestId" class="_tableSelected"><tbody><tr><td data-original-background-color="" style="background-color: rgba(198, 198, 198, 0.7);" class="_tableCellSelected">a</td><td data-original-background-color="" style="background-color: rgba(198, 198, 198, 0.7);" class="_tableCellSelected">w</td></tr></tbody></table></div>'
         );
     });
 
@@ -163,7 +159,7 @@ describe('TableSelectionPlugin', () => {
         );
 
         expect(editor.getContent()).toBe(
-            '<div><br></div><div><table class="" style="border-collapse: collapse;" cellspacing="0" cellpadding="1"><tbody><tr style="background-color: rgb(255, 255, 255);"><td class="_tableCellSelected" style="width: 120px; border-width: 1px; border-style: solid; border-color: rgb(171, 171, 171);" data-on-focus-cache="onBlur" data-original-background-color=""><br></td><td class="_tableCellSelected" style="width: 120px; border-width: 1px; border-style: solid; border-color: rgb(171, 171, 171);" data-on-focus-cache="onBlur" data-original-background-color=""><br></td></tr><tr style="background-color: rgb(255, 255, 255);"><td class="_tableCellSelected" style="width: 120px; border-width: 1px; border-style: solid; border-color: rgb(171, 171, 171);" data-on-focus-cache="onBlur" data-original-background-color=""><br></td><td class="_tableCellSelected" style="width: 120px; border-width: 1px; border-style: solid; border-color: rgb(171, 171, 171);" data-on-focus-cache="onBlur" data-original-background-color=""><br></td></tr></tbody></table></div><div><br></div>'
+            '<div><br></div><div><table class="" style="border-collapse: collapse;" cellspacing="0" cellpadding="1"><tbody><tr style="background-color: rgb(255, 255, 255);"><td class="" style="width: 120px; border-width: 1px; border-style: solid; border-color: rgb(171, 171, 171);"><br></td><td class="" style="width: 120px; border-width: 1px; border-style: solid; border-color: rgb(171, 171, 171);"><br></td></tr><tr style="background-color: rgb(255, 255, 255);"><td class="" style="width: 120px; border-width: 1px; border-style: solid; border-color: rgb(171, 171, 171);"><br></td><td class="" style="width: 120px; border-width: 1px; border-style: solid; border-color: rgb(171, 171, 171);"><br></td></tr></tbody></table></div><div><br></div>'
         );
     });
 });
