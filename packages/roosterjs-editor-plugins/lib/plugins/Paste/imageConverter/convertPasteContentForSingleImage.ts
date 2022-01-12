@@ -1,5 +1,5 @@
 import { BeforePasteEvent, TrustedHTMLHandler } from 'roosterjs-editor-types';
-import { moveChildNodes } from 'roosterjs-editor-dom';
+import { moveChildNodes, safeInstanceOf } from 'roosterjs-editor-dom';
 
 /**
  * @internal
@@ -16,6 +16,14 @@ export default function convertPasteContentForSingleImage(
     if (html && image) {
         //If there are Html in the clipboard, and the html body only have one img children, use the HTML
         const doc = new DOMParser().parseFromString(trustedHTMLHandler(html), 'text/html');
+        if (
+            safeInstanceOf(doc.body.firstChild, 'HTMLImageElement') &&
+            safeInstanceOf(fragment.firstChild, 'HTMLImageElement') &&
+            doc.body.firstChild.src != fragment.firstChild.src
+        ) {
+            doc.body.firstChild.src = fragment.firstChild.src;
+        }
+
         moveChildNodes(fragment, doc?.body);
     }
 }
